@@ -60,7 +60,7 @@ trait Claim[L <: Level, S] {
   val level: L
 
   def verify[L2 <: Level, S2](implicit verify: Verificator[L, S, L2, S2]): Claim[L2, S2] = {
-    verify(this)
+    verify(statements)
   }
 
   /**
@@ -74,7 +74,7 @@ trait Claim[L <: Level, S] {
 }
 
 trait Verificator[L<: Level,S,L2<:Level,S2] {
-  def apply(s: Claim[L,S]): Claim[L2,S2]
+  def apply(s: S): Claim[L2,S2]
 }
 
 //extends java's Principal idea, with typed principals
@@ -115,14 +115,12 @@ object Claim {
 // to another type of monad (a verified one). With a pubkey verification we can only extract the public key as a principal
 // But the problem here is that the map and flatMap method of monads must map to exactly the same type of monads, so that
 // we can't change the level
-/*
   implicit val pkToTruth = new Verificator[PubKeyVerified.type,Cert,Truth.type,Principal[BigInt]] {
-    def apply(s: Claim[PubKeyVerified.type, Cert]) = s.flatMap(c => ClaimMonad(Truth).point(Principal(c.pubKey)))
+    def apply(cert: Cert) =  ClaimMonad(Truth).point(Principal(cert.pubKey))
   }
-*/
-/*
+
     implicit val webIDVerif = new Verificator[PubKeyVerified.type,Cert,Truth.type,List[Principal[URI]]] {
-      def apply(s: Claim[PubKeyVerified.type, Cert]) = s.flatMap(c => ClaimMonad(Truth).point(webidVerif(c.subjectAltNames, c.pubKey)))
+      def apply(cert: Cert) =  ClaimMonad(Truth).point(webidVerif(cert.subjectAltNames, cert.pubKey))
       def webidVerif(sans: List[URI], key: BigInt ) = {
         for (san <- sans;
              doc <- Web.get(san.doc)
@@ -130,8 +128,6 @@ object Claim {
         ) yield Principal(san)
       }
     }
-
-*/
 
   implicit def ClaimMonad[L <: Level](implicit lvl: L): Monad[({type f[+a] = Claim[L, a]})#f] =
     new Monad[({type f[+a] = Claim[L, a]})#f] {
@@ -148,26 +144,49 @@ object Claim {
 }
 
 object Test {
+  import Claim._
+  import System.out._
+  Web.put(new URI("http://bblfish.net/"),Doc(new URI("http://bblfish.net/#hjs"),BigInt("9876543210")))
+  implicitly[Truth.type]
+  implicitly[PubKeyVerified.type]
 
-    import Claim._
-    import System.out._
+  def main(args: Array[String]) {
 
-    implicitly[Truth.type]
-    implicitly[PubKeyVerified.type]
-
-
-    Web.put(new URI("http://bblfish.net/"),Doc(new URI("http://bblfish.net/#hjs"),BigInt("9876543210")))
-
-    //for a certificate whose signature was signed by a trusted Certificate Authority - We can then accept
-    //everything in the Cert as true.
+    val caSignedCert = Cert("Henry Story",BigInt(123456789),List(new java.net.URI("http://bblfish.net/#hjs")))
+    println("1. CA Certified")
+    println("First we try a certificate that was signed by a well trusted CA: "+caSignedCert)
+    println("we can therefore trust everything in it - (as much as we trust the CA)")
     val truthMonad = ClaimMonad(Truth)
-    val tmCert = truthMonad.point(Cert("Henry Story",BigInt(123456789),List(new java.net.URI("http://bblfish.net/#hjs"))))
+    val tmCert = truthMonad.point(caSignedCert)
+
+    //we can map that monad to other monads that are just as true
     val cn = tmCert.map(_.cn)
-    println(cn.extract) //we can access the common name
+    println("The Common Name of that first CA certified user is " +cn.extract)
+
+   println()
+   println()
+   val cheapCert = Cert("Henry Story",BigInt("9876543210"),List(new java.net.URI("http://bblfish.net/#hjs")))
+   println("2. WebID For Certificates that are not Not CA Certified ")
+   println("Next we take a certificate which we imagine has not been certified by someone we trust.")
+   println("Only the public key has been verified here: ")
+   println("   "+cheapCert)
 
     //next an example with a certificate who signature we don't trust or don't know about - we only know that the
     //public key was correct
-//    val pkVerifiedMonad = ClaimMonad(PubKeyVerified)
-//    val pkCert = pkVerifiedMonad.point(Cert("Henry Story",BigInt("9876543210"),List(new java.net.URI("http://bblfish.net/#hjs"))))
-//    val pk = pkCert.verify(pkToTruth).extract
+    val pkVerifiedMonad = ClaimMonad(PubKeyVerified)
+    val pkCertMonad = pkVerifiedMonad.point(cheapCert)
+
+    val pk = pkCertMonad.verify(pkToTruth)
+    println("and so we can extract the public key - which is " +pk.extract)
+    println("but we cannot extract any other info without a verification procedure")
+
+    val webid = pkCertMonad.verify(webIDVerif)
+    println("the verified WebID one of "+webid.extract)
+    println()
+    println("had the Web been different, with a different public key published at http://bblfish.net/")
+    Web.put(new URI("http://bblfish.net/"),Doc(new URI("http://bblfish.net/#hjs"),BigInt("1111111111")))
+    println("then our verification would have been different")
+    val webid2 = pkCertMonad.verify(webIDVerif)
+    println("the verified WebID is one of "+webid2.extract)
+  }
 }
