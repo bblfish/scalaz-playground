@@ -7,6 +7,9 @@ import language.implicitConversions
 import language.higherKinds
 
 /**
+ * This is work emerging from a thread on the scalaz mailing list
+ * https://groups.google.com/d/topic/scalaz/0v0mv_2-WDw/discussion
+ *
  * To make it easier to work out what is needed we start with a simplification of what a certicate is.
  * Usually the only fields we are interested in are the following.
  * We are of course interested in the signature of the CA cert during verification, and that is something
@@ -62,6 +65,7 @@ trait Claim[L <: Level, S] {
 
   /**
    * we can only extract the statement if it is true
+   * (Thanks to Lars Hupel for this idea)
    * @param ev
    * @return
    */
