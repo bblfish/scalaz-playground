@@ -162,6 +162,7 @@ object Test {
     //we can map that monad to other monads that are just as true
     val cn = tmCert.map(_.cn)
     println("The Common Name of that first CA certified user is " +cn.extract)
+    assert(cn.extract === "Henry Story")
 
    println()
    println()
@@ -182,11 +183,15 @@ object Test {
 
     val webid = pkCertMonad.verify(webIDVerif)
     println("the verified WebID one of "+webid.extract)
+    assert(webid.extract == List(Principal(new URI("http://bblfish.net/#hjs"))))
+
+
     println()
     println("had the Web been different, with a different public key published at http://bblfish.net/")
     Web.put(new URI("http://bblfish.net/"),Doc(new URI("http://bblfish.net/#hjs"),BigInt("1111111111")))
     println("then our verification would have been different")
     val webid2 = pkCertMonad.verify(webIDVerif)
     println("the verified WebID is one of "+webid2.extract)
+    assert(webid2.extract == List[Principal[URI]]())
   }
 }
