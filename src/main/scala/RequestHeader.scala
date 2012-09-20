@@ -27,8 +27,7 @@ case class Doc(primaryTopic: URI, key: BigInt)
 /**
  * The web is just a place to find documents
  */
-object Web extends mutable.HashMap[URI,Doc](
-  new URI("http://bblfish.net/")->Doc(new URI("http://bblfish.net/#hjs"),BigInt("9876543210")))
+object Web extends mutable.HashMap[URI,Doc]
 
 /**
  * This would be part of an server side Play 2.0 Http request header interface, that would allow
@@ -112,11 +111,12 @@ object Claim {
 // to another type of monad (a verified one). With a pubkey verification we can only extract the public key as a principal
 // But the problem here is that the map and flatMap method of monads must map to exactly the same type of monads, so that
 // we can't change the level
-//
-//  implicit val pkToTruth = new Verificator[PubKeyVerified.type,Cert,Truth.type,Principal[BigInt]] {
-//    def apply(s: Claim[PubKeyVerified.type, Cert]) = s.flatMap(c => ClaimMonad(Truth).point(Principal(c.pubKey)))
-//  }
-
+/*
+  implicit val pkToTruth = new Verificator[PubKeyVerified.type,Cert,Truth.type,Principal[BigInt]] {
+    def apply(s: Claim[PubKeyVerified.type, Cert]) = s.flatMap(c => ClaimMonad(Truth).point(Principal(c.pubKey)))
+  }
+*/
+/*
     implicit val webIDVerif = new Verificator[PubKeyVerified.type,Cert,Truth.type,List[Principal[URI]]] {
       def apply(s: Claim[PubKeyVerified.type, Cert]) = s.flatMap(c => ClaimMonad(Truth).point(webidVerif(c.subjectAltNames, c.pubKey)))
       def webidVerif(sans: List[URI], key: BigInt ) = {
@@ -127,6 +127,7 @@ object Claim {
       }
     }
 
+*/
 
   implicit def ClaimMonad[L <: Level](implicit lvl: L): Monad[({type f[+a] = Claim[L, a]})#f] =
     new Monad[({type f[+a] = Claim[L, a]})#f] {
@@ -149,6 +150,9 @@ object Test {
 
     implicitly[Truth.type]
     implicitly[PubKeyVerified.type]
+
+
+    Web.put(new URI("http://bblfish.net/"),Doc(new URI("http://bblfish.net/#hjs"),BigInt("9876543210")))
 
     //for a certificate whose signature was signed by a trusted Certificate Authority - We can then accept
     //everything in the Cert as true.
