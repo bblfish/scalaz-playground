@@ -1,21 +1,38 @@
+package play.req.v2
+
 import collection.mutable
 import java.net.URI
-import play._
-import scalaz.concurrent.Promise
 import scalaz._
 import Scalaz._
 import language.implicitConversions
 import language.higherKinds
+import concurrent.Promise
 
 /**
  * This is work emerging from a thread on the scalaz mailing list
  * https://groups.google.com/d/topic/scalaz/0v0mv_2-WDw/discussion
  *
- * Here I wrote up an initial proposal by Lars Hupel.
- * The Web, Cert and Doc objects are in the WebPlayDoe.scala file in the same directory.
- *
- *
+ * To make it easier to work out what is needed we start with a simplification of what a certicate is.
+ * Usually the only fields we are interested in are the following.
+ * We are of course interested in the signature of the CA cert during verification, and that is something
+ * we can try to model later
+ * @param cn the common name part of the Distinguished Name (an LDAP construct)
+ * @param pubKey we imagine that a public key is only one number - it is two for RSA
+ * @param subjectAltNames a list of URI alternative names.
  */
+
+case class Cert(cn: String, pubKey: BigInt, subjectAltNames: List[URI] )
+
+/**
+ * We imagine a document class, that is super restricted at this point
+ * (One would have to generalise it to allow it to describe any object)
+ */
+case class Doc(primaryTopic: URI, key: BigInt)
+
+/**
+ * The web is just a place to find documents
+ */
+object Web extends mutable.HashMap[URI,Doc]
 
 /**
  * This would be part of an server side Play 2.0 Http request header interface, that would allow
