@@ -1,9 +1,9 @@
 scalaVersion := "2.10.0-M7"
 
-resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
+resolvers += "Typesafe Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
  
 libraryDependencies ++= Seq(
-  "org.scalaz" % "scalaz-core" % "7.0.0-M3" cross CrossVersion.full
+   "org.scalaz" % "scalaz-core" % "7.0-20120929-SNAPSHOT" cross CrossVersion.full
 )
  
 scalacOptions += "-feature"
