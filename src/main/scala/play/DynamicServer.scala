@@ -113,7 +113,8 @@ object TestDynamic {
 
   //First president Obama's certificate is signed by Verisign
   //note: that is already pretty unlikely. The white house cannot be dependent for the security
-  //   of the president on a private company.  It would be more likely that the key is in DNSSEC.
+  //   of the president on a private company.  It would be more likely that the key is in DNSSEC,
+  //   and that one should use DANE http://tools.ietf.org/html/rfc6698
   val caSignedCertChain = Array(
     Cert("Obama",BigInt("1392483590234"),List(new URI("https://whitehouse.gov/2008/president#obama"))),
     Verisign
@@ -162,7 +163,7 @@ object TestDynamic {
    *  @return a list of Future principals (verifying takes time)
    */
 //
-// It is easier to work out how things work with map and flatmap. This does not work
+// It is easier to work out how things work with map and flatmap. This does not work - see below
 //
 //  def webIDverify(x509: Array[Cert]): List[Future[Validation[Exception,Principal[Any]]]] =
 //    for {
@@ -196,6 +197,8 @@ object TestDynamic {
 
   def main(args: Array[String]) {
 
+
+    // this is happening asynchronously so we must print all info on one line
     def printPrincipal(name: String,
                        futurePrincipals: Future[(List[Future[Validation[Exception,Principal[Any]]]],List[Principal[Any]])] )
                        (implicit web: Web)
@@ -221,6 +224,9 @@ object TestDynamic {
       }
     }
 
+    // we run our tests in two parallele universes ( one with the web in state web1 the other with the
+    // web in state web2
+
     {
       implicit val web1 = Web("Web1")
       // we fill the web up with information (ok only a few minimal documents...)
@@ -242,9 +248,9 @@ object TestDynamic {
 
     {
       implicit val web2 = Web("Web2")
-      //Here I don't have enough money to get a Verisign signed certificate for myself, so I have my
-      //server sign the certificate. That key could be in DNSsec too.
+      //Here I lost my certificate, and made a new one. What happens if someone uses the old one? Wait and see...
       web2.resources.put(new URI("http://bblfish.net/"), Doc(new URI("http://bblfish.net/#hjs"), BigInt("131313131")))
+      //obama here does not have a WebID profile document.
 
       printPrincipal("Obama", extractPrincipals(obamaRequest))
       printPrincipal("Henry", extractPrincipals(myRequest))
