@@ -37,7 +37,7 @@ import Scalaz._
  */
 
 case class Cert(cn: String,
-                pubKey: BigInt,
+                pubKey: PubKey,
                 subjectAltNames: List[URI] )
 
 
@@ -45,7 +45,10 @@ case class Cert(cn: String,
  * We imagine a document class, that is super restricted at this point
  * (One would have to generalise it to allow it to describe any object)
  */
-case class Doc(primaryTopic: URI, key: BigInt)
+case class Doc(primaryTopic: URI, key: PubKey)
+
+trait PubKey
+case class RSA(mod: BigInt, exp: BigInt) extends PubKey
 
 /**
  * The web is just a place to find documents. As we want to demonstrate behavior in different
@@ -120,7 +123,7 @@ object Claim {
     }
 }
 
-object Verisign extends Cert("Verisign",BigInt("314983423423"),List())
+object Verisign extends Cert("Verisign",RSA(314983423,65),List())
 
 object TestDynamic {
   import Claim._
@@ -132,12 +135,12 @@ object TestDynamic {
   //   of the president on a private company.  It would be more likely that the key is in DNSSEC,
   //   and that one should use DANE http://tools.ietf.org/html/rfc6698
   val caSignedCertChain = Array(
-    Cert("Obama",BigInt("1392483590234"),List(new URI("https://whitehouse.gov/2008/president#obama"))),
+    Cert("Obama",RSA(139248359,65),List(new URI("https://whitehouse.gov/2008/president#obama"))),
     Verisign
   )
 
   //my cert, I don't add the CA to the chain, cause nobody knows my server :'-(
-  val myCertChain = Array(Cert("Henry",BigInt("9876543210"),List(new URI("http://bblfish.net/#hjs"))))
+  val myCertChain = Array(Cert("Henry",RSA(98765432,65),List(new URI("http://bblfish.net/#hjs"))))
 
   // A request received when Barack Obama connects
   val obamaRequest = new RequestHeader {
@@ -206,7 +209,7 @@ object TestDynamic {
     }
 
   // a public key in a cert is already verified
-  def pubkeyVerify(x509: Array[Cert]): Principal[BigInt] = Principal(x509(0).pubKey)
+  def pubkeyVerify(x509: Array[Cert]): Principal[PubKey] = Principal(x509(0).pubKey)
 
   //what should one have if someone connects but we does not send a certificate?
   //a failed promise?
@@ -248,11 +251,13 @@ object TestDynamic {
       // we fill the web up with information (ok only a few minimal documents...)
 
       web1.resources.put(new URI("https://whitehouse.gov/2008/president"),
-        Doc(new URI("https://whitehouse.gov/2008/president#obama"), BigInt("1392483590234")))
+        Doc(new URI("https://whitehouse.gov/2008/president#obama"), RSA(139248359,65)))
 
       //Here I don't have enough money to get a Verisign signed certificate for myself, so I have my
-      //server sign the certificate. That key could be in DNSsec too.
-      web1.resources.put(new URI("http://bblfish.net/"), Doc(new URI("http://bblfish.net/#hjs"), BigInt("9876543210")))
+      //server sign the certificate. That key could be in DNSsec too, follwing the DANE protocol
+      //http://tools.ietf.org/html/rfc6698 - in which case the WebID lookup would still be useful
+      //to get further information about a user, and to verifiy the validity
+      web1.resources.put(new URI("http://bblfish.net/"), Doc(new URI("http://bblfish.net/#hjs"), RSA(98765432,65)))
 
       println("1. Obama has a cert signed by a well trusted CA. " + caSignedCertChain(0))
       println("2. Henry has a cert that is not verified by a known CA. "+myCertChain)
@@ -265,7 +270,7 @@ object TestDynamic {
     {
       implicit val web2 = Web("Web2")
       //Here I lost my certificate, and made a new one. What happens if someone uses the old one? Wait and see...
-      web2.resources.put(new URI("http://bblfish.net/"), Doc(new URI("http://bblfish.net/#hjs"), BigInt("131313131")))
+      web2.resources.put(new URI("http://bblfish.net/"), Doc(new URI("http://bblfish.net/#hjs"), RSA(131313131,65)))
       //obama here does not have a WebID profile document.
 
       printPrincipal("Obama", extractPrincipals(obamaRequest))
