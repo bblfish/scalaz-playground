@@ -139,7 +139,7 @@ object TestDynamic {
     Verisign
   )
 
-  //my cert, I don't add the CA to the chain, cause nobody knows my server :'-(
+  //my cert, I don't + the CA to the chain, cause nobody knows my server :'-(
   val myCertChain = Array(Cert("Henry",RSA(98765432,65),List(new URI("http://bblfish.net/#hjs"))))
 
   // A request received when Barack Obama connects
