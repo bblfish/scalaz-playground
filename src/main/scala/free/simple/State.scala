@@ -1,6 +1,7 @@
-package free
+package free.simple
 
 /**
+ * A simple version of State that runs out of stack quickly.
  * http://skillsmatter.com/podcast/scala/stackless-scala-free-monads
  * @param runS
  * @tparam S

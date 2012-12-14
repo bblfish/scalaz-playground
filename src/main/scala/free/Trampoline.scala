@@ -1,36 +1,18 @@
 package free
 
-import annotation.tailrec
+import scala.language.implicitConversions
 
 /**
- * http://skillsmatter.com/podcast/scala/stackless-scala-free-monads
- * Created with IntelliJ IDEA.
- * User: hjs
- * Date: 12/12/2012
- * Time: 23:03
- * To change this template use File | Settings | File Templates.
+ * Trampoline using Free
+ * from article that goes with  http://skillsmatter.com/podcast/scala/stackless-scala-free-monads
  */
-sealed trait Trampoline[+A] {
-  @tailrec
-  final def runT: A =
-    this match {
-      case More(k) => k().runT
-      case Done(v) => v
-    }
+object Trampoline {
+  type Trampoline[+A] = Free[Function0 , A]
 
   /**
-   * the size of the trampoline
-   * @param i
-   * @return
+   * turn something into a trampoline.
+   * warning: do not use in recursive functions.
    */
-  @tailrec
-  final def size(i: Int=0): Int =
-    this match {
-      case More(k) => k().size(i+1)
-      case Done(v) => i
-    }
+  implicit def step[A](a: => A): Trampoline[A] = More(() => Done(a))
+
 }
-
-case class More[+A](k: () => Trampoline[A]) extends Trampoline[A]
-
-case class Done[+A](result: A) extends Trampoline[A]

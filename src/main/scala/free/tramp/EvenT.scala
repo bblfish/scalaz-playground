@@ -1,11 +1,9 @@
-package free
-
+package free.tramp
 
 /**
  * trampolined Even
  */
 object EvenT {
-  import Trampoline.Trampoline
 
   def even[A](ns: List[A]): Trampoline[Boolean] = ns match {
     case Nil => Done(true)
@@ -17,4 +15,3 @@ object EvenT {
     case x :: xs => More(() => even(xs))
   }
 }
-

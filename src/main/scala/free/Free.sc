@@ -3,7 +3,7 @@
  * and paper on Free http://days2012.scala-lang.org/sites/days2012/files/bjarnason_trampolines.pdf
  */
 
-import free.State
+import free.simple.State
 import State._
 val p = pureState[Int, List[(Int,Char)]](List())
 
