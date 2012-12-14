@@ -1,7 +1,7 @@
 package free
 
 import annotation.tailrec
-
+import scalaz.Functor
 import scala.language.higherKinds
 
 

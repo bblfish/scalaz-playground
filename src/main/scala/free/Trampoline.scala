@@ -8,6 +8,7 @@ import scala.language.implicitConversions
  */
 object Trampoline {
   type Trampoline[+A] = Free[Function0 , A]
+  import scalaz.std.function.function0Instance
 
   /**
    * turn something into a trampoline.

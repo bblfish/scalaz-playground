@@ -12,7 +12,7 @@ object BinTree {
   type BTDone[+A] = Done[Pa,A]
   type BTMore[+A] = More[Pa,A]
 
-  implicit def paFunctor = new Functor[Pa] {
+  implicit def pazFunctor = new scalaz.Functor[Pa] {
     def map[A, B](pair: (A, A))(f: (A) => B): Pa[B] = (f(pair._1),f(pair._2))
   }
 

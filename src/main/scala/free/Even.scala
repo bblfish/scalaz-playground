@@ -4,8 +4,10 @@ package free
 /**
  * trampolined Even
  */
-object EvenT {
+object Even {
   import Trampoline.Trampoline
+  import scalaz.std.function.function0Instance
+
 
   def even[A](ns: List[A]): Trampoline[Boolean] = ns match {
     case Nil => Done(true)
