@@ -1,8 +1,8 @@
-package free
-
+package free.article
 
 import scala.language.implicitConversions
 import Trampoline._
+
 
 /**
  * A version of State with the Trampoline based on Free

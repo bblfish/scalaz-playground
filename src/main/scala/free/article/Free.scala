@@ -1,13 +1,13 @@
-package free
+package free.article
 
 import annotation.tailrec
 import scalaz.Functor
 import scala.language.higherKinds
 
-
 /**
  * Free Monad,
  * built by abstracting from Trampoline, without using scalaz
+ * from the article at http://days2012.scala-lang.org/sites/days2012/files/bjarnason_trampolines.pdf
  */
 sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
   import scalaz.Liskov.<~<
@@ -35,7 +35,8 @@ sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
 
   /** Runs to completion, using a function that extracts the resumption from its suspension functor. */
   final def go[AA >: A](f: S[Free[S, AA]] => Free[S, AA]): AA = {
-    @tailrec def go2(t: Free[S, AA]): AA = t.resume match {
+    @tailrec
+    def go2(t: Free[S, AA]): AA = t.resume match {
       case Left(s) => go2(f(s))
       case Right(r) => r
     }

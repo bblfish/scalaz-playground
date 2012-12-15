@@ -1,5 +1,6 @@
-package free
+package free.article
 
+import Trampoline._
 
 /**
  * trampolined Even

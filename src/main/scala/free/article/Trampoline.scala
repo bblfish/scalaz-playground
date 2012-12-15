@@ -1,4 +1,4 @@
-package free
+package free.article
 
 import scala.language.implicitConversions
 
