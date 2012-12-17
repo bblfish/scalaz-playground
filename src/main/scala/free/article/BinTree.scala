@@ -24,14 +24,12 @@ object BinTree {
   implicit def step[A](a: => A): BinTree[A] = new BTDone(a)
 
   //this function can be used in the go(..) function to sum all elements of the tree
-  //not a good idea: this turns the go into an infinite loop, perhaps because itself
-  // it uses flatmap.
-  //  def sum(in: Pa[BinTree[Int]]): BinTree[Int] = {
-  //    val (a,b) = in
-  //    for {
-  //      i <- a
-  //      ii <- b
-  //    } yield i+ii
-  //  }
+  def sum(in: Pa[BinTree[Int]]): BinTree[Int] = {
+    val (a,b) = in
+    for {
+      i <- a
+      ii <- b
+    } yield i+ii
+  }
 
 }

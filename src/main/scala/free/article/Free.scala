@@ -13,22 +13,22 @@ sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
   import scalaz.Liskov.<~<
   import Trampoline._
 
-  private case class FlatMap[S[+ _], A, +B](a: Free[S, A],
+  private case class FlatMap[S[+ _], A, +B](a: () => Free[S, A],
                                             f: A => Free[S, B])(implicit S: Functor[S]) extends Free[S, B]
 
   final def resume: Either[S[Free[S, A]], A] =
     this match {
       case Done(a) => Right(a)
       case More(k) => Left(k)
-      case a FlatMap f => a match {
+      case a FlatMap f => a() match {
         case Done(a) => f(a).resume
         case More(k) => Left(S.map(k)(_ flatMap f))
-        case b FlatMap g => b.flatMap((x: Any) => g(x) flatMap f).resume }
+        case b FlatMap g => b().flatMap((x: Any) => g(x) flatMap f).resume }
     }
 
   def flatMap[B]( f: A => Free[S,B]): Free[S,B] = this match {
     case FlatMap(a, g) => FlatMap(a, (x: Any) => g(x) flatMap f)
-    case x => FlatMap(x, f)
+    case x => FlatMap(() => x, f)
   }
 
   def map[B](f: A => B): Free[S,B] = flatMap(a => Done(f(a)))
