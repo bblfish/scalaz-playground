@@ -3,11 +3,15 @@
  * and paper on Free http://days2012.scala-lang.org/sites/days2012/files/bjarnason_trampolines.pdf
  */
 
-import free.simple.State
-import State._
-val p = pureState[Int, List[(Int,Char)]](List())
 
-p.runS(3)
+import free.article.BinTree._
+import free.article.FlatMap
 
-p flatMap( f => f)
+val m = new BTMore[Int]((new BTMore((2,5)),new BTDone(3)))
 
+val fm = m.flatMap(x=>if (x%2==0) new BTDone(x+2) else new BTMore((new BTDone(x+3), new BTDone(x+5))))
+
+val FM = fm.asInstanceOf[FlatMap[Pa,Int,Int]]
+
+import free.scalaz.BinTree._
+val start = new BTSuspend[Int]((new BTSuspend((new BTSuspend((1,2)),new BTSuspend((3,5)))),new BTSuspend((7,11))))

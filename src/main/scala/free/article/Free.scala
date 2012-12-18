@@ -13,10 +13,7 @@ sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
   import scalaz.Liskov.<~<
   import Trampoline._
 
-  private case class FlatMap[S[+ _], A, +B](a: () => Free[S, A],
-                                            f: A => Free[S, B])(implicit S: Functor[S]) extends Free[S, B]
-
-  final def resume: Either[S[Free[S, A]], A] =
+  final def resume: Either[S[Free[S, A]], A] =  {
     this match {
       case Done(a) => Right(a)
       case More(k) => Left(k)
@@ -25,6 +22,7 @@ sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
         case More(k) => Left(S.map(k)(_ flatMap f))
         case b FlatMap g => b().flatMap((x: Any) => g(x) flatMap f).resume }
     }
+  }
 
   def flatMap[B]( f: A => Free[S,B]): Free[S,B] = this match {
     case FlatMap(a, g) => FlatMap(a, (x: Any) => g(x) flatMap f)
@@ -52,3 +50,6 @@ sealed abstract class Free[S[+_],+A](implicit S: Functor[S]) {
 case class Done[S[+ _], +A](a: A)(implicit f: Functor[S]) extends Free[S, A]
 
 case class More[S[+ _], +A](k: S[Free[S, A]])(implicit f: Functor[S]) extends Free[S, A]
+
+case class FlatMap[S[+ _], A, +B](val a: () => Free[S, A],
+                                  val f: A => Free[S, B])(implicit S: Functor[S]) extends Free[S, B]
